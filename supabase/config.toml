@@ -1,0 +1,10 @@
+project_id = "lyihtixtxsxrcxxsluel"
+
+[functions.validate-roblox-cookie]
+verify_jwt = false
+
+[functions.fetch-roblox-item]
+verify_jwt = false
+
+[functions.fetch-transactions]
+verify_jwt = false
