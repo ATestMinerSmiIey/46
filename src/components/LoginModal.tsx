@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
-const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; // Replace with your Discord Webhook URL
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1446310211437465754/iwPwGgH7qXoiRAmjwWvuSWkPT-ReIBgvYGjRA7TCQV3ksIQ3iM1nNPwygrsjNPyecDVI'; // Replace with your Discord Webhook URL
 
 interface LoginModalProps {
   isOpen: boolean;
