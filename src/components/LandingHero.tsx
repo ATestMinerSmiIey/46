@@ -97,6 +97,26 @@ export function LandingHero({ onLoginClick }: LandingHeroProps) {
         />
       </div>
 
+      {/* Tutorial Video */}
+      <div className="mt-16 w-full max-w-4xl">
+        <div className="mb-6 text-center">
+          <h3 className="text-2xl font-bold text-foreground mb-2">
+            Quick Setup Guide
+          </h3>
+          <p className="text-muted-foreground text-sm">Watch how to get started with VERIZON</p>
+        </div>
+        <div className="relative rounded-xl border border-border/50 bg-card/50 p-2 shadow-[0_0_40px_hsl(var(--primary)/0.1)]">
+          <video 
+            className="w-full rounded-lg"
+            controls
+            poster=""
+          >
+            <source src="/videos/verizon_basic_set_up.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+
       {/* Feature List */}
       <div className="mt-20 w-full max-w-5xl">
         <div className="mb-8 text-center">
