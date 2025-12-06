@@ -1,4 +1,4 @@
-import { ExternalLink, RefreshCw, Plus, Trash2, FileJson, History } from 'lucide-react';
+import { ExternalLink, RefreshCw, Plus, Trash2, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { RobloxItem } from '@/hooks/useRobloxData';
@@ -8,7 +8,7 @@ interface SnipedItemsTableProps {
   items: RobloxItem[];
   onRefresh: () => void;
   onAddClick: () => void;
-  onBulkImportClick: () => void;
+  
   onTransactionImportClick: () => void;
   onRemove: (itemId: string) => void;
   isRefreshing?: boolean;
@@ -18,7 +18,6 @@ export function SnipedItemsTable({
   items, 
   onRefresh, 
   onAddClick, 
-  onBulkImportClick, 
   onTransactionImportClick,
   onRemove, 
   isRefreshing 
@@ -41,10 +40,6 @@ export function SnipedItemsTable({
           <Button variant="outline" size="sm" onClick={onTransactionImportClick}>
             <History className="mr-2 h-4 w-4" />
             Import History
-          </Button>
-          <Button variant="outline" size="sm" onClick={onBulkImportClick}>
-            <FileJson className="mr-2 h-4 w-4" />
-            JSON
           </Button>
           <Button variant="outline" size="sm" onClick={onAddClick}>
             <Plus className="mr-2 h-4 w-4" />
