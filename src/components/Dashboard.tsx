@@ -5,7 +5,7 @@ import { StatsCard } from '@/components/StatsCard';
 import { ProfitChart } from '@/components/ProfitChart';
 import { SnipedItemsTable } from '@/components/SnipedItemsTable';
 import { AddItemModal } from '@/components/AddItemModal';
-import { BulkImportModal } from '@/components/BulkImportModal';
+
 import { TransactionImportModal } from '@/components/TransactionImportModal';
 import { Watchlist } from '@/components/Watchlist';
 import { Settings } from '@/components/Settings';
@@ -18,7 +18,7 @@ type Tab = 'dashboard' | 'watchlist' | 'settings';
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  
   const [isTransactionImportOpen, setIsTransactionImportOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -44,11 +44,6 @@ export function Dashboard() {
     setIsRefreshing(false);
   };
 
-  const handleBulkImport = async (importItems: { assetId: number; boughtFor: number }[]) => {
-    for (const item of importItems) {
-      await addItem(item.assetId, item.boughtFor);
-    }
-  };
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -114,7 +109,7 @@ export function Dashboard() {
               items={items} 
               onRefresh={handleRefresh}
               onAddClick={() => setIsAddModalOpen(true)}
-              onBulkImportClick={() => setIsBulkImportOpen(true)}
+              
               onTransactionImportClick={() => setIsTransactionImportOpen(true)}
               onRemove={removeItem}
               isRefreshing={isRefreshing}
@@ -132,11 +127,6 @@ export function Dashboard() {
         onAdd={addItem}
       />
 
-      <BulkImportModal
-        isOpen={isBulkImportOpen}
-        onClose={() => setIsBulkImportOpen(false)}
-        onImport={handleBulkImport}
-      />
 
       <TransactionImportModal
         isOpen={isTransactionImportOpen}
