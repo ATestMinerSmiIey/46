@@ -155,7 +155,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       );
     }
 
-     // email verification
     if (step === 'email-verification') {
       return (
         <>
@@ -263,4 +262,3 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       </div>
     </div>
   );
-}
