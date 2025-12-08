@@ -262,3 +262,4 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       </div>
     </div>
   );
+}
