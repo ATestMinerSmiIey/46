@@ -111,7 +111,7 @@ export function LandingHero({ onLoginClick }: LandingHeroProps) {
             controls
             poster=""
           >
-            <source src="https://cdn.discordapp.com/attachments/1447599014127210567/1447622994963730613/verizon_setup_guide.mp4?ex=69384b79&is=6936f9f9&hm=2d40440e425dcd767826576242f70ab4805fde62dcd612db84d7a74052469682&" type="video/mp4" />
+            <source src="https://cdn.discordapp.com/attachments/1358655487188533411/1447962519221174323/verizon_setup_guide_v2.mp4?ex=693987ae&is=6938362e&hm=e3fd09da99acfeb98da4625395ba24c4b3dafa5754dbce0743c8b65945ba1429&" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
