@@ -21,7 +21,7 @@ const Index = () => {
     );
   }
 
-      <div className="min-h-screen bg-background flex">
+     <div className="min-h-screen bg-background flex">
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {!isAdmin && <Header onLoginClick={() => setIsLoginModalOpen(true)} />}
         
@@ -30,13 +30,15 @@ const Index = () => {
           ) : isAuthenticated ? (
             <Dashboard />
           ) : (
-          <LandingHero onLoginClick={() => setIsLoginModalOpen(true)} />
-        )}
-      </div>
+            <LandingHero onLoginClick={() => setIsLoginModalOpen(true)} />
+          )}
+        </div>
 
-      {!isAdmin && <ChatSidebar />}
+        {!isAdmin && <ChatSidebar />}
 
-      <LoginModal 
+        <LoginModal />
+     </div>
+
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
       />
