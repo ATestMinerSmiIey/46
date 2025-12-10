@@ -22,20 +22,24 @@ const Index = () => {
   }
 
   return (
-     <div className="min-h-screen bg-background flex">
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {!isAdmin && <Header onLoginClick={() => setIsLoginModalOpen(true)} />}
-        
-          {isAdmin ? (
-            <AdminDashboard />
-          ) : isAuthenticated ? (
-            <Dashboard />
-          ) : (
-            <LandingHero onLoginClick={() => setIsLoginModalOpen(true)} />
-          )}
-        </div>
+    <div className="min-h-screen bg-background">
+      {isAdmin ? (
+        <AdminDashboard />
+      ) : (
+        <div className="flex min-h-screen">
+          <div className="flex-1 flex flex-col min-w-0">
+            <Header onLoginClick={() => setIsLoginModalOpen(true)} />
+            
+            {isAuthenticated ? (
+              <Dashboard />
+            ) : (
+              <LandingHero onLoginClick={() => setIsLoginModalOpen(true)} />
+            )}
+          </div>
 
-        {!isAdmin && <ChatSidebar />}
+          <ChatSidebar />
+        </div>
+      )}
 
         <LoginModal 
           isOpen={isLoginModalOpen} 
