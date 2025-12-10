@@ -101,31 +101,30 @@ export function ChatSidebar() {
         {/* Typing Indicator */}
         {typingUser && (
           <div className="flex items-start gap-2">
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
-                {typingUser.avatar ? (
-                  <img src={typingUser.avatar} alt={typingUser.username} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xs font-medium text-primary">
-                    {typingUser.username.charAt(0).toUpperCase()}
-                  </span>
-                )}
-                <img src={typingUser.avatar} alt={typingUser.username} className="w-full h-full object-cover" />
+            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+              {typingUser.avatar ? (
+                <img 
+                  src={typingUser.avatar} 
+                  alt={typingUser.username} 
+                  className="w-full h-full object-cover" 
+                />
               ) : (
                 <span className="text-xs font-medium text-primary">
                   {typingUser.username.charAt(0).toUpperCase()}
                 </span>
               )}
             </div>
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground truncate">
-                    {typingUser.username}
+                <span className="text-sm font-medium text-foreground truncate">
+                  {typingUser.username}
                 </span>
-                </div>
-                <div className="flex items-center gap-1 py-1">
-                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <div className="flex items-center gap-1 py-1">
+                <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -157,7 +156,4 @@ export function ChatSidebar() {
       </div>
     </div>
   );
-
 }
-
-
