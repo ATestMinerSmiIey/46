@@ -130,6 +130,7 @@ export function ChatSidebar() {
             </div>
           </div>
         )}
+        
         <div ref={messagesEndRef} />
       </div>
 
@@ -139,10 +140,11 @@ export function ChatSidebar() {
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Ask a question..."
+              placeholder="Chat disabled..."
               className="flex-1 h-9 text-sm bg-background/50"
+              disabled
             />
-            <Button type="submit" size="sm" className="h-9 px-3">
+            <Button type="submit" size="sm" className="h-9 px-3" disabled>
               <Send className="h-4 w-4" />
             </Button>
           </form>
@@ -157,4 +159,5 @@ export function ChatSidebar() {
   );
 
 }
+
 
