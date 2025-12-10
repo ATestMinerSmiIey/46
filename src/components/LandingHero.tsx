@@ -37,13 +37,13 @@ const features = [
 
 export function LandingHero({ onLoginClick }: LandingHeroProps) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 pt-24 pb-12">
-      <div className="flex flex-col items-center text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center px-6 pt-24 pb-12 overflow-x-hidden">
+      <div className="flex flex-col items-center text-center max-w-full">
         <div className="mb-8 flex h-24 w-24 animate-float items-center justify-center rounded-2xl bg-primary shadow-[0_0_40px_hsl(var(--primary)/0.4),0_0_80px_hsl(var(--primary)/0.2)]">
           <Check className="h-14 w-14 text-primary-foreground" />
         </div>
 
-        <h1 className="mb-4 text-5xl font-extrabold italic tracking-tight bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent sm:text-6xl md:text-7xl">
+        <h1 className="mb-4 text-5xl font-extrabold italic tracking-tight bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent sm:text-6xl md:text-7xl max-w-full overflow-hidden">
           VERIZON
         </h1>
 
