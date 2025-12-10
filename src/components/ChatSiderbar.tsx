@@ -3,104 +3,11 @@ import { MessageCircle, Send, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface ChatMessage {
-  id: string;
-  username: string;
-  avatar?: string;
-  message: string;
-  timestamp: string;
-  isAI?: boolean;
-}
-
-const aiConversations: ChatMessage[] = [
-  {
-    id: '1',
-    username: 'Jake_Limited',
-    message: 'yo how does the transaction import actually work?',
-    timestamp: '2 min ago',
-    isAI: true,
-  },
-  {
-    id: '2',
-    username: 'SniperBot',
-    avatar: '🤖',
-    message: 'It scans your Roblox transaction history automatically! Just click import and it finds all your limited purchases with the exact prices you paid.',
-    timestamp: '2 min ago',
-    isAI: true,
-  },
-  {
-    id: '3',
-    username: 'RblxTrader99',
-    message: 'wait so it calculates profit automatically too?',
-    timestamp: '5 min ago',
-    isAI: true,
-  },
-  {
-    id: '4',
-    username: 'SniperBot',
-    avatar: '🤖',
-    message: 'Yep! It fetches the current RAP from Rolimons and compares it to what you paid. Shows profit in both Robux and GBP 💰',
-    timestamp: '5 min ago',
-    isAI: true,
-  },
-  {
-    id: '5',
-    username: 'LimitedKing',
-    message: 'is my cookie safe tho? kinda worried about that',
-    timestamp: '8 min ago',
-    isAI: true,
-  },
-  {
-    id: '6',
-    username: 'SniperBot',
-    avatar: '🤖',
-    message: 'Your cookie is only stored locally on your device, never on our servers. We just use it to verify your account and fetch your transactions. You can logout anytime to clear it.',
-    timestamp: '8 min ago',
-    isAI: true,
-  },
-  {
-    id: '7',
-    username: 'SnipeQueen',
-    message: 'the watchlist feature is actually so useful, finally found a good tracker',
-    timestamp: '12 min ago',
-    isAI: true,
-  },
-  {
-    id: '8',
-    username: 'TradeMaster',
-    message: 'how many pages does it scan for transactions?',
-    timestamp: '15 min ago',
-    isAI: true,
-  },
-  {
-    id: '9',
-    username: 'SniperBot',
-    avatar: '🤖',
-    message: 'Up to 10 pages! So even your older limited purchases get picked up. Shows progress while scanning too.',
-    timestamp: '15 min ago',
-    isAI: true,
-  },
-  {
-    id: '10',
-    username: 'NewTrader2024',
-    message: 'what does RAP mean exactly?',
-    timestamp: '18 min ago',
-    isAI: true,
-  },
-  {
-    id: '11',
-    username: 'SniperBot',
-    avatar: '🤖',
-    message: 'RAP = Recent Average Price. It\'s the average price limiteds have sold for recently. We pull this data from Rolimons to calculate your profits accurately.',
-    timestamp: '18 min ago',
-    isAI: true,
-  },
-];
+import { useAdmin } from '@/contexts/AdminContext';
 
 export function ChatSidebar() {
   const { isAuthenticated, user } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>(aiConversations);
+  const { chatMessages, typingUser, snipeFeeds } = useAdmin();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -183,4 +90,5 @@ export function ChatSidebar() {
       </div>
     </div>
   );
+
 }
