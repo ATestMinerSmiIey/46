@@ -17,22 +17,21 @@ export function ChatSidebar() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [chatMessages, snipeFeeds, typingUser]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !isAuthenticated) return;
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      username: user?.name || 'User',
-      message: newMessage.trim(),
-      timestamp: 'now',
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    // Users can't actually send - this is controlled by admin
     setNewMessage('');
   };
+
+  // Combine and sort all feed items by timestamp
+  const allFeedItems = [
+    ...chatMessages.map(msg => ({ ...msg, type: 'chat' as const })),
+    ...snipeFeeds.map(snipe => ({ ...snipe, type: 'snipe' as const })),
+  ].sort((a, b) => parseInt(a.id) - parseInt(b.id));
 
   return (
     <div className="w-80 bg-card/50 backdrop-blur-sm border-l border-border/50 flex flex-col h-full">
@@ -41,30 +40,96 @@ export function ChatSidebar() {
           <MessageCircle className="h-5 w-5 text-primary" />
           <h3 className="font-semibold text-foreground">Community Chat</h3>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">Ask questions about features</p>
+        <p className="text-xs text-muted-foreground mt-1">Live snipes & chat</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {messages.map((msg) => (
-          <div key={msg.id} className="group">
-            <div className="flex items-start gap-2">
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary shrink-0">
-                {msg.avatar || msg.username.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-medium truncate ${msg.avatar === '🤖' ? 'text-primary' : 'text-foreground'}`}>
-                    {msg.username}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">{msg.timestamp}</span>
+        {allFeedItems.length === 0 && !typingUser && (
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+            No messages yet
+          </div>
+        )}
+
+        {allFeedItems.map((item) => (
+          <div key={`${item.type}-${item.id}`} className="group">
+            {item.type === 'chat' ? (
+              <div className="flex items-start gap-2">
+                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+                  {item.avatar ? (
+                    <img src={item.avatar} alt={item.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-medium text-primary">
+                      {item.username.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed break-words">
-                  {msg.message}
-                </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {item.username}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">{item.timestamp}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed break-words">
+                    {item.message}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-success/10 border border-success/20">
+                {item.itemThumbnail && (
+                  <img 
+                    src={item.itemThumbnail} 
+                    alt={item.itemName}
+                    className="w-8 h-8 rounded object-cover"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-foreground">
+                    <span className="font-semibold text-success">{item.username}</span>
+                    {' sniped '}
+                    <span className="font-semibold">{item.itemName}</span>
+                    {' for '}
+                    <span className="text-success font-semibold">{item.price}R$</span>
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Typing Indicator */}
+        {typingUser && (
+          <div className="flex items-start gap-2">
+              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+                {typingUser.avatar ? (
+                  <img src={typingUser.avatar} alt={typingUser.username} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xs font-medium text-primary">
+                    {typingUser.username.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <img src={typingUser.avatar} alt={typingUser.username} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xs font-medium text-primary">
+                  {typingUser.username.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground truncate">
+                    {typingUser.username}
+                </span>
+                </div>
+                <div className="flex items-center gap-1 py-1">
+                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
-        ))}
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -92,3 +157,4 @@ export function ChatSidebar() {
   );
 
 }
+
