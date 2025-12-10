@@ -53,6 +53,94 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [snipeFeeds, setSnipeFeeds] = useState<SnipeFeed[]>([]);
   const [typingUser, setTypingUser] = useState<TypingUser | null>(null);
+    // Load initial data from database
+  useEffect(() => {
+    const loadData = async () => {
+      // Load chat messages
+      const { data: messages } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(50);
+      
+      if (messages) {
+        setChatMessages(messages.map(msg => ({
+          id: msg.id,
+          username: msg.username,
+          avatar: msg.avatar || '',
+          message: msg.message,
+          timestamp: formatTimestamp(msg.created_at),
+        })));
+      }
+
+      // Load snipe feeds
+      const { data: snipes } = await supabase
+        .from('snipe_feeds')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(50);
+      
+      if (snipes) {
+        setSnipeFeeds(snipes.map(snipe => ({
+          id: snipe.id,
+          username: snipe.username,
+          itemId: snipe.item_id,
+          itemName: snipe.item_name,
+          itemThumbnail: snipe.item_thumbnail || '',
+          price: snipe.price,
+          timestamp: formatTimestamp(snipe.created_at),
+        })));
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Set up realtime subscriptions
+  useEffect(() => {
+    const chatChannel = supabase
+      .channel('chat-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        (payload) => {
+          const msg = payload.new as any;
+          setChatMessages(prev => [...prev, {
+            id: msg.id,
+            username: msg.username,
+            avatar: msg.avatar || '',
+            message: msg.message,
+            timestamp: formatTimestamp(msg.created_at),
+          }]);
+        }
+      )
+      .subscribe();
+
+    const snipeChannel = supabase
+      .channel('snipe-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'snipe_feeds' },
+        (payload) => {
+          const snipe = payload.new as any;
+          setSnipeFeeds(prev => [...prev, {
+            id: snipe.id,
+            username: snipe.username,
+            itemId: snipe.item_id,
+            itemName: snipe.item_name,
+            itemThumbnail: snipe.item_thumbnail || '',
+            price: snipe.price,
+            timestamp: formatTimestamp(snipe.created_at),
+          }]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(chatChannel);
+      supabase.removeChannel(snipeChannel);
+    };
+  }, []);
 
   useEffect(() => {
     if (isAdmin) {
@@ -61,6 +149,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('verizon_admin');
     }
   }, [isAdmin]);
+
+   const formatTimestamp = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
+  };
 
   const getUserAvatar = async (username: string): Promise<string> => {
     try {
@@ -84,14 +185,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const addChatMessage = async (username: string, message: string) => {
     const avatar = await getUserAvatar(username);
-    const newMessage: ChatMessage = {
+    await supabase.from('chat_messages').insert({
       id: Date.now().toString(),
       username,
       avatar,
       message,
-      timestamp: 'now',
-    };
-    setChatMessages(prev => [...prev, newMessage]);
+    });
   };
 
   const addSnipeFeed = async (username: string, itemId: string, price: number) => {
@@ -103,16 +202,13 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       });
       const data = await response.json();
       
-      const newSnipe: SnipeFeed = {
-        id: Date.now().toString(),
+      await supabase.from('snipe_feeds').insert({
         username,
-        itemId,
-        itemName: data.name || `Item ${itemId}`,
-        itemThumbnail: data.thumbnail || '',
+        item_id: itemId,
+        item_name: data.name || `Item ${itemId}`,
+        item_thumbnail: data.thumbnail || '',
         price,
-        timestamp: 'now',
-      };
-      setSnipeFeeds(prev => [...prev, newSnipe]);
+      });
     } catch (error) {
       console.error('Error adding snipe:', error);
     }
@@ -144,3 +240,4 @@ export function useAdmin() {
 
 
 export { ALLOWED_USERNAMES };
+
