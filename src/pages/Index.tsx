@@ -3,6 +3,7 @@ import { Header } from '@/components/Header';
 import { LandingHero } from '@/components/LandingHero';
 import { LoginModal } from '@/components/LoginModal';
 import { Dashboard } from '@/components/Dashboard';
+import { ChatSidebar } from '@/components/ChatSidebar';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
@@ -17,15 +18,18 @@ const Index = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header onLoginClick={() => setIsLoginModalOpen(true)} />
-      
-      {isAuthenticated ? (
-        <Dashboard />
-      ) : (
-        <LandingHero onLoginClick={() => setIsLoginModalOpen(true)} />
-      )}
+      <div className="min-h-screen bg-background flex">
+       <div className="flex-1 flex flex-col min-w-0">
+        <Header onLoginClick={() => setIsLoginModalOpen(true)} />
+        
+        {isAuthenticated ? (
+          <Dashboard />
+        ) : (
+          <LandingHero onLoginClick={() => setIsLoginModalOpen(true)} />
+        )}
+      </div>
+
+      <ChatSidebar />
 
       <LoginModal 
         isOpen={isLoginModalOpen} 
