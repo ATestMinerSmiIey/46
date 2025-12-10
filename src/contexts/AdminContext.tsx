@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ChatMessage {
   id: string;
@@ -140,5 +141,6 @@ export function useAdmin() {
   }
   return context;
 }
+
 
 export { ALLOWED_USERNAMES };
