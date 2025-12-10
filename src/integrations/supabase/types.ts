@@ -26,7 +26,60 @@ export type Database = {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          id: string
+          message: string
+          username: string
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          username: string
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      snipe_feeds: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_name: string
+          item_thumbnail: string | null
+          price: number
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_name: string
+          item_thumbnail?: string | null
+          price: number
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_name?: string
+          item_thumbnail?: string | null
+          price?: number
+          username?: string
+        }
+        Relationships: []
+      }
     }
   }
 }
