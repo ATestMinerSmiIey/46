@@ -21,6 +21,7 @@ const Index = () => {
     );
   }
 
+  return (
      <div className="min-h-screen bg-background flex">
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {!isAdmin && <Header onLoginClick={() => setIsLoginModalOpen(true)} />}
@@ -36,13 +37,11 @@ const Index = () => {
 
         {!isAdmin && <ChatSidebar />}
 
-        <LoginModal />
+        <LoginModal 
+          isOpen={isLoginModalOpen} 
+          onClose={() => setIsLoginModalOpen(false)} 
+        />
      </div>
-
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
-      />
-    </div>
   );
 };
 
