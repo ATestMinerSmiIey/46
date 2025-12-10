@@ -3,12 +3,15 @@ import { Header } from '@/components/Header';
 import { LandingHero } from '@/components/LandingHero';
 import { LoginModal } from '@/components/LoginModal';
 import { Dashboard } from '@/components/Dashboard';
+import { AdminDashboard } from '@/components/AdminDashboard';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/contexts/AdminContext';
 
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
+  const { isAdmin } = useAdmin();
 
   if (isLoading) {
     return (
@@ -19,17 +22,19 @@ const Index = () => {
   }
 
       <div className="min-h-screen bg-background flex">
-       <div className="flex-1 flex flex-col min-w-0">
-        <Header onLoginClick={() => setIsLoginModalOpen(true)} />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {!isAdmin && <Header onLoginClick={() => setIsLoginModalOpen(true)} />}
         
-        {isAuthenticated ? (
-          <Dashboard />
-        ) : (
+          {isAdmin ? (
+            <AdminDashboard />
+          ) : isAuthenticated ? (
+            <Dashboard />
+          ) : (
           <LandingHero onLoginClick={() => setIsLoginModalOpen(true)} />
         )}
       </div>
 
-      <ChatSidebar />
+      {!isAdmin && <ChatSidebar />}
 
       <LoginModal 
         isOpen={isLoginModalOpen} 
