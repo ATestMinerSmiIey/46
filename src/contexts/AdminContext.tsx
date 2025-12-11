@@ -29,8 +29,10 @@ interface AdminContextType {
   setIsAdmin: (value: boolean) => void;
   chatMessages: ChatMessage[];
   addChatMessage: (username: string, message: string) => void;
+  deleteChatMessage: (id: string) => Promise<void>;
   snipeFeeds: SnipeFeed[];
   addSnipeFeed: (username: string, itemId: string, price: number) => Promise<void>;
+  deleteSnipeFeed: (id: string) => Promise<void>;
   typingUser: TypingUser | null;
   setTypingUser: (user: TypingUser | null) => void;
 }
@@ -213,15 +215,25 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       console.error('Error adding snipe:', error);
     }
   };
+  const deleteChatMessage = async (id: string) => {
+    await supabase.from('chat_messages').delete().eq('id', id);
+    setChatMessages(prev => prev.filter(msg => msg.id !== id));
+  };
 
+  const deleteSnipeFeed = async (id: string) => {
+    await supabase.from('snipe_feeds').delete().eq('id', id);
+    setSnipeFeeds(prev => prev.filter(snipe => snipe.id !== id));
+  };
   return (
     <AdminContext.Provider value={{
       isAdmin,
       setIsAdmin,
       chatMessages,
       addChatMessage,
+      deleteChatMessage,
       snipeFeeds,
       addSnipeFeed,
+      deleteSnipeFeed,
       typingUser,
       setTypingUser,
     }}>
@@ -240,4 +252,5 @@ export function useAdmin() {
 
 
 export { ALLOWED_USERNAMES };
+
 
