@@ -44,6 +44,7 @@ const ALLOWED_USERNAMES = [
   'epetted',
   'Lowrises',
   'WHENDOESTHEPARTYSTOP'
+  'SupplyingTheMarket'
 ];
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -252,5 +253,6 @@ export function useAdmin() {
 
 
 export { ALLOWED_USERNAMES };
+
 
 
