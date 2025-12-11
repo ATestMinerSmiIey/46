@@ -43,7 +43,7 @@ const ALLOWED_USERNAMES = [
   'lyicals',
   'epetted',
   'Lowrises',
-  'WHENDOESTHEPARTYSTOP'
+  'WHENDOESTHEPARTYSTOP',
   'SupplyingTheMarket'
 ];
 
@@ -253,6 +253,7 @@ export function useAdmin() {
 
 
 export { ALLOWED_USERNAMES };
+
 
 
 
