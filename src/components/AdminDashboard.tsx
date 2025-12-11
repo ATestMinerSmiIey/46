@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { MessageCircle, Crosshair, Send, LogOut, Loader2 } from 'lucide-react';
+import { MessageCircle, Crosshair, Send, LogOut, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAdmin, ALLOWED_USERNAMES } from '@/contexts/AdminContext';
 
 export function AdminDashboard() {
-  const { setIsAdmin, addChatMessage, addSnipeFeed, chatMessages, snipeFeeds, setTypingUser } = useAdmin();
+  const { setIsAdmin, addChatMessage, deleteChatMessage, addSnipeFeed, deleteSnipeFeed, chatMessages, snipeFeeds, setTypingUser } = useAdmin();
   
   const [selectedUsername, setSelectedUsername] = useState(ALLOWED_USERNAMES[0]);
   const [chatInput, setChatiInput] = useState('');
@@ -131,9 +131,17 @@ export function AdminDashboard() {
               <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Messages</h3>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {chatMessages.slice(-5).reverse().map((msg) => (
-                  <div key={msg.id} className="flex items-center gap-2 text-sm">
+                  <div key={msg.id} className="flex items-center gap-2 text-sm group">
                     <span className="font-medium text-foreground">{msg.username}:</span>
-                    <span className="text-muted-foreground truncate">{msg.message}</span>
+                    <span className="text-muted-foreground truncate flex-1">{msg.message}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                      onClick={() => deleteChatMessage(msg.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -208,7 +216,7 @@ export function AdminDashboard() {
               <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Snipes</h3>
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {snipeFeeds.slice(-5).reverse().map((snipe) => (
-                  <div key={snipe.id} className="flex items-center gap-3 p-2 rounded-lg bg-background/50">
+                  <div key={snipe.id} className="flex items-center gap-3 p-2 rounded-lg bg-background/50 group">
                     {snipe.itemThumbnail && (
                       <img 
                         src={snipe.itemThumbnail} 
@@ -225,6 +233,14 @@ export function AdminDashboard() {
                         <span className="text-success font-semibold">{snipe.price}R$</span>
                       </p>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                      onClick={() => deleteSnipeFeed(snipe.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -234,4 +250,5 @@ export function AdminDashboard() {
       </div>
     </div>
   );
+
 }
