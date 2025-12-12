@@ -1,11 +1,22 @@
 import { useState } from 'react';
-import { MessageCircle, Crosshair, Send, LogOut, Loader2, Trash2 } from 'lucide-react';
+import { MessageCircle, Crosshair, Send, LogOut, Loader2, Trash2, Bot, Power } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAdmin, ALLOWED_USERNAMES } from '@/contexts/AdminContext';
 
 export function AdminDashboard() {
-  const { setIsAdmin, addChatMessage, deleteChatMessage, addSnipeFeed, deleteSnipeFeed, chatMessages, snipeFeeds, setTypingUser } = useAdmin();
+  const { 
+    setIsAdmin, 
+    addChatMessage, 
+    deleteChatMessage, 
+    addSnipeFeed, 
+    deleteSnipeFeed, 
+    chatMessages, 
+    snipeFeeds, 
+    setTypingUser,
+    autoChatEnabled,
+    setAutoChatEnabled
+  } = useAdmin();
   
   const [selectedUsername, setSelectedUsername] = useState(ALLOWED_USERNAMES[0]);
   const [chatInput, setChatiInput] = useState('');
@@ -80,6 +91,36 @@ export function AdminDashboard() {
             <LogOut className="h-4 w-4" />
             Logout
           </Button>
+        </div>
+
+        {/* Auto Chat Toggle */}
+        <div className="rounded-xl border border-border bg-card p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Bot className="h-5 w-5 text-primary" />
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Auto Chat</h2>
+                <p className="text-sm text-muted-foreground">
+                  AI generates humanized trading conversations automatically
+                </p>
+              </div>
+            </div>
+            <Button
+              variant={autoChatEnabled ? "default" : "outline"}
+              onClick={() => setAutoChatEnabled(!autoChatEnabled)}
+              className="gap-2"
+            >
+              <Power className="h-4 w-4" />
+              {autoChatEnabled ? 'Enabled' : 'Disabled'}
+            </Button>
+          </div>
+          {autoChatEnabled && (
+            <div className="mt-4 p-3 rounded-lg bg-success/10 border border-success/20">
+              <p className="text-sm text-success">
+                Auto chat is running. Messages will be generated every 30-90 seconds.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Chat Management */}
@@ -250,5 +291,4 @@ export function AdminDashboard() {
       </div>
     </div>
   );
-
 }
