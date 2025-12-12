@@ -176,78 +176,103 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Auto-chat functionality
+  const chatMessagesRef = useRef<ChatMessage[]>([]);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    chatMessagesRef.current = chatMessages;
+  }, [chatMessages]);
+
   useEffect(() => {
     localStorage.setItem('verizon_auto_chat', autoChatEnabled ? 'true' : 'false');
 
-    if (autoChatEnabled) {
-      const generateAutoChat = async () => {
-        try {
-          // Get recent messages from current state
-          const recentMessages = chatMessages.slice(-5).map(m => ({
-            username: m.username,
-            message: m.message,
-          }));
+    // Always clear existing interval first
+    if (autoChatIntervalRef.current) {
+      clearInterval(autoChatIntervalRef.current);
+      autoChatIntervalRef.current = null;
+    }
 
-          const response = await supabase.functions.invoke('generate-auto-chat', {
-            body: { recentMessages },
-          });
+    if (!autoChatEnabled) {
+      return;
+    }
 
-          if (response.error) {
-            console.error('Auto-chat API error:', response.error);
-            return;
-          }
+    let isCancelled = false;
 
-          if (response.data?.messages) {
-            for (const msg of response.data.messages) {
-              // Show typing indicator
-              const avatar = await getUserAvatar(msg.username);
-              setTypingUser({ username: msg.username, avatar });
-              
-              // Random typing delay 2-5 seconds
-              await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
-              
-              setTypingUser(null);
-              
-              // Add message to database
-              await supabase.from('chat_messages').insert({
-                username: msg.username,
-                avatar,
-                message: msg.message,
-              });
-              
-              // Small delay between multiple messages
-              if (response.data.messages.length > 1) {
-                await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-              }
+    const generateAutoChat = async () => {
+      if (isCancelled) return;
+      
+      try {
+        // Use ref to get current messages without dependency
+        const recentMessages = chatMessagesRef.current.slice(-8).map(m => ({
+          username: m.username,
+          message: m.message,
+        }));
+
+        const response = await supabase.functions.invoke('generate-auto-chat', {
+          body: { recentMessages },
+        });
+
+        if (isCancelled) return;
+
+        if (response.error) {
+          console.error('Auto-chat API error:', response.error);
+          return;
+        }
+
+        if (response.data?.messages) {
+          for (const msg of response.data.messages) {
+            if (isCancelled) return;
+            
+            // Show typing indicator
+            const avatar = await getUserAvatar(msg.username);
+            if (isCancelled) return;
+            
+            setTypingUser({ username: msg.username, avatar });
+            
+            // Random typing delay 1.5-4 seconds
+            await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2500));
+            
+            if (isCancelled) return;
+            setTypingUser(null);
+            
+            // Add message to database
+            await supabase.from('chat_messages').insert({
+              username: msg.username,
+              avatar,
+              message: msg.message,
+            });
+            
+            // Delay between messages if multiple
+            if (response.data.messages.length > 1) {
+              await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1500));
             }
           }
-        } catch (error) {
-          console.error('Auto-chat error:', error);
         }
-      };
+      } catch (error) {
+        console.error('Auto-chat error:', error);
+      }
+    };
 
-      // Run after initial delay, then every 20-40 seconds
-      const initialTimeout = setTimeout(() => {
-        generateAutoChat();
-      }, 3000);
-      
-      autoChatIntervalRef.current = setInterval(() => {
-        generateAutoChat();
-      }, 20000 + Math.random() * 20000); // 20-40 seconds
+    // Initial delay then run
+    const initialTimeout = setTimeout(() => {
+      if (!isCancelled) generateAutoChat();
+    }, 3000);
+    
+    // Run every 15-35 seconds
+    autoChatIntervalRef.current = setInterval(() => {
+      if (!isCancelled) generateAutoChat();
+    }, 15000 + Math.random() * 20000);
 
-      return () => {
-        clearTimeout(initialTimeout);
-        if (autoChatIntervalRef.current) {
-          clearInterval(autoChatIntervalRef.current);
-        }
-      };
-    } else {
+    return () => {
+      isCancelled = true;
+      clearTimeout(initialTimeout);
       if (autoChatIntervalRef.current) {
         clearInterval(autoChatIntervalRef.current);
         autoChatIntervalRef.current = null;
       }
-    }
-  }, [autoChatEnabled]); // Only depend on autoChatEnabled, NOT chatMessages
+      setTypingUser(null);
+    };
+  }, [autoChatEnabled]);
 
   useEffect(() => {
     if (isAdmin) {
