@@ -226,14 +226,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         }
       };
 
-      // Run after initial delay, then every 60-120 seconds (longer interval to avoid rate limits)
+      // Run after initial delay, then every 20-40 seconds
       const initialTimeout = setTimeout(() => {
         generateAutoChat();
-      }, 5000);
+      }, 3000);
       
       autoChatIntervalRef.current = setInterval(() => {
         generateAutoChat();
-      }, 60000 + Math.random() * 60000); // 60-120 seconds
+      }, 20000 + Math.random() * 20000); // 20-40 seconds
 
       return () => {
         clearTimeout(initialTimeout);
