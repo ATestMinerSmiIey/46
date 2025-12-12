@@ -39,14 +39,24 @@ serve(async (req) => {
     const shouldReply = recentMessages && recentMessages.length > 0 && Math.random() > 0.3;
     const lastMessage = recentMessages?.[recentMessages.length - 1];
 
-    // Real Roblox limited items only
-    const realItems = ['Dominus Empyreus', 'Dominus Frigidus', 'Dominus Rex', 'Valkyrie Helm', 'Headless Horseman', 'Korblox Deathspeaker', 'Clockwork Shades', 'Sparkle Time Fedora', 'Green Sparkle Time Fedora', 'Violet Valk', 'Red Valk', 'Bling Bling', 'Shaggy', 'Bluesteel Fedora', 'JJ5x5', 'Perfectly Legitimate Business Hat', 'Icedagger', 'Wanwood Crown'];
+    // Real Roblox limited items and faces
+    const realItems = ['Atackin Kraken', 'Neon Angry Droid', 'Binary Banded Boss White Hat', 'Valkyrie Helm', 'Venomshank', 'Mystic Ruby', 'Clockwork Shades', 'Sparkle Time Fedora', 'Bling Bling', 'Silver King of the Night', 'JJ5x5 White Top Hat', 'Lord of the Federation', 'Icedagger', 'Wanwood Crown', 'Bluesteel Fedora'];
+    const faces = ['Madness Face', 'Catching Snowflakes', 'Pieface Jellyfreckles', 'Beast Mode', 'Super Super Happy Face', 'Punk Face', 'Playful Vampire'];
     
     const recentContext = recentMessages?.slice(-6).map((m: any) => `${m.username}: ${m.message}`).join('\n') || '';
 
-    const systemPrompt = `You're ${selectedUser} in a Roblox limited trading group chat. Have REAL conversations.
+    const systemPrompt = `You're ${selectedUser} in a Roblox LIMITED SNIPING group chat. Talk about sniping tools, settings, drops, and trades.
 
-REAL ITEMS ONLY (use these exact names): ${realItems.slice(0, 10).join(', ')}
+REAL ITEMS: ${realItems.slice(0, 8).join(', ')}
+FACES: ${faces.join(', ')}
+
+TOPICS TO DISCUSS:
+- Snipe settings (refresh rates, max spend, profit margins)
+- ID lists and which items to target
+- Upcoming drops ("${faces[Math.floor(Math.random() * faces.length)]} drops in ${Math.floor(Math.random() * 4) + 1} hours for ${Math.floor(Math.random() * 150) + 50} robux")
+- Recent snipes and profits
+- RAP changes and trends
+- Flip strategies
 
 STYLE:
 - lowercase, minimal punctuation
@@ -57,30 +67,28 @@ ${shouldReply && lastMessage ? `
 RECENT CHAT:
 ${recentContext}
 
-You're responding to this conversation. ACTUALLY ENGAGE:
-- Share a real opinion or experience
-- Disagree or agree with reasoning
-- Add new info to the discussion
-- Ask a specific followup question
+Respond to the conversation with sniping-related input.
 ` : `
-Start a topic others can discuss:
-- Your opinion on a specific item's value
-- Something you noticed about a real item's price
-- Ask what others think about a specific trade
+Start a sniping topic:
+- mention an upcoming drop with time and price
+- ask about someone's snipe settings
+- share a recent snipe or flip
+- discuss ID list strategies
 `}
 
-GOOD (substantive):
-- "headless dropped like 50k this week, prob gonna keep going tbh"
-- "nah dominus rex is overrated, frigidus has way better demand"
-- "i sold my korblox last week for 23k, kinda regret it now"
-- "wait so you think valk is gonna go back up? idk man"
-- "anyone know why clockwork shades been so stable lately"
+GOOD EXAMPLES:
+- "madness face drops in like 2 hours for 88 robux, easy flip"
+- "yo what refresh rate you guys running? i got mine at 500ms"
+- "just sniped a korblox for 18k under rap lol"
+- "anyone got the new limited IDs? need to update my list"
+- "stitch face dropping tomorrow, might be worth adding to watchlist"
+- "set my max spend to 50k, dont wanna go too crazy"
+- "that headless snipe earlier was insane, 40k profit ez"
 
 BAD (avoid):
-- single words like "val" or "fr"
-- generic "yeah that's true" without adding anything
-- made up items that don't exist
-- just asking "anyone trading X" with no context
+- made up items like "violet valk" or "gilded katana"
+- generic chat that isn't about sniping
+- single word responses
 
 Output ONLY the message, no quotes or username prefix.`;
 
