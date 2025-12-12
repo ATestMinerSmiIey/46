@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ChatMessage {
@@ -35,6 +35,8 @@ interface AdminContextType {
   deleteSnipeFeed: (id: string) => Promise<void>;
   typingUser: TypingUser | null;
   setTypingUser: (user: TypingUser | null) => void;
+  autoChatEnabled: boolean;
+  setAutoChatEnabled: (value: boolean) => void;
 }
 
 const ALLOWED_USERNAMES = [
@@ -43,8 +45,7 @@ const ALLOWED_USERNAMES = [
   'lyicals',
   'epetted',
   'Lowrises',
-  'WHENDOESTHEPARTYSTOP',
-  'SupplyingTheMarket'
+  'WHENDOESTHEPARTYSTOP'
 ];
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -56,7 +57,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [snipeFeeds, setSnipeFeeds] = useState<SnipeFeed[]>([]);
   const [typingUser, setTypingUser] = useState<TypingUser | null>(null);
-    // Load initial data from database
+  const [autoChatEnabled, setAutoChatEnabled] = useState(() => {
+    return localStorage.getItem('verizon_auto_chat') === 'true';
+  });
+  const autoChatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load initial data from database
   useEffect(() => {
     const loadData = async () => {
       // Load chat messages
@@ -99,7 +105,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     loadData();
   }, []);
 
-  // Set up realtime subscriptions
+  // Set up realtime subscriptions for INSERT and DELETE
   useEffect(() => {
     const chatChannel = supabase
       .channel('chat-changes')
@@ -108,13 +114,25 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
         (payload) => {
           const msg = payload.new as any;
-          setChatMessages(prev => [...prev, {
-            id: msg.id,
-            username: msg.username,
-            avatar: msg.avatar || '',
-            message: msg.message,
-            timestamp: formatTimestamp(msg.created_at),
-          }]);
+          setChatMessages(prev => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === msg.id)) return prev;
+            return [...prev, {
+              id: msg.id,
+              username: msg.username,
+              avatar: msg.avatar || '',
+              message: msg.message,
+              timestamp: formatTimestamp(msg.created_at),
+            }];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'chat_messages' },
+        (payload) => {
+          const deletedId = (payload.old as any).id;
+          setChatMessages(prev => prev.filter(msg => msg.id !== deletedId));
         }
       )
       .subscribe();
@@ -126,15 +144,27 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         { event: 'INSERT', schema: 'public', table: 'snipe_feeds' },
         (payload) => {
           const snipe = payload.new as any;
-          setSnipeFeeds(prev => [...prev, {
-            id: snipe.id,
-            username: snipe.username,
-            itemId: snipe.item_id,
-            itemName: snipe.item_name,
-            itemThumbnail: snipe.item_thumbnail || '',
-            price: snipe.price,
-            timestamp: formatTimestamp(snipe.created_at),
-          }]);
+          setSnipeFeeds(prev => {
+            // Avoid duplicates
+            if (prev.some(s => s.id === snipe.id)) return prev;
+            return [...prev, {
+              id: snipe.id,
+              username: snipe.username,
+              itemId: snipe.item_id,
+              itemName: snipe.item_name,
+              itemThumbnail: snipe.item_thumbnail || '',
+              price: snipe.price,
+              timestamp: formatTimestamp(snipe.created_at),
+            }];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'snipe_feeds' },
+        (payload) => {
+          const deletedId = (payload.old as any).id;
+          setSnipeFeeds(prev => prev.filter(snipe => snipe.id !== deletedId));
         }
       )
       .subscribe();
@@ -145,6 +175,80 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Auto-chat functionality
+  useEffect(() => {
+    localStorage.setItem('verizon_auto_chat', autoChatEnabled ? 'true' : 'false');
+
+    if (autoChatEnabled) {
+      const generateAutoChat = async () => {
+        try {
+          // Get recent messages from current state
+          const recentMessages = chatMessages.slice(-5).map(m => ({
+            username: m.username,
+            message: m.message,
+          }));
+
+          const response = await supabase.functions.invoke('generate-auto-chat', {
+            body: { recentMessages },
+          });
+
+          if (response.error) {
+            console.error('Auto-chat API error:', response.error);
+            return;
+          }
+
+          if (response.data?.messages) {
+            for (const msg of response.data.messages) {
+              // Show typing indicator
+              const avatar = await getUserAvatar(msg.username);
+              setTypingUser({ username: msg.username, avatar });
+              
+              // Random typing delay 2-5 seconds
+              await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+              
+              setTypingUser(null);
+              
+              // Add message to database
+              await supabase.from('chat_messages').insert({
+                username: msg.username,
+                avatar,
+                message: msg.message,
+              });
+              
+              // Small delay between multiple messages
+              if (response.data.messages.length > 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Auto-chat error:', error);
+        }
+      };
+
+      // Run after initial delay, then every 60-120 seconds (longer interval to avoid rate limits)
+      const initialTimeout = setTimeout(() => {
+        generateAutoChat();
+      }, 5000);
+      
+      autoChatIntervalRef.current = setInterval(() => {
+        generateAutoChat();
+      }, 60000 + Math.random() * 60000); // 60-120 seconds
+
+      return () => {
+        clearTimeout(initialTimeout);
+        if (autoChatIntervalRef.current) {
+          clearInterval(autoChatIntervalRef.current);
+        }
+      };
+    } else {
+      if (autoChatIntervalRef.current) {
+        clearInterval(autoChatIntervalRef.current);
+        autoChatIntervalRef.current = null;
+      }
+    }
+  }, [autoChatEnabled]); // Only depend on autoChatEnabled, NOT chatMessages
+
   useEffect(() => {
     if (isAdmin) {
       localStorage.setItem('verizon_admin', 'true');
@@ -153,7 +257,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, [isAdmin]);
 
-   const formatTimestamp = (dateStr: string) => {
+  const formatTimestamp = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -188,8 +292,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const addChatMessage = async (username: string, message: string) => {
     const avatar = await getUserAvatar(username);
+    
+    // Insert into database - realtime will handle updating state
     await supabase.from('chat_messages').insert({
-      id: Date.now().toString(),
       username,
       avatar,
       message,
@@ -198,13 +303,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const addSnipeFeed = async (username: string, itemId: string, price: number) => {
     try {
-      const response = await fetch('https://lyihtixtxsxrcxxsluel.supabase.co/functions/v1/fetch-roblox-item', {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-roblox-item`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assetId: itemId }),
       });
       const data = await response.json();
       
+      // Insert into database - realtime will handle updating state
       await supabase.from('snipe_feeds').insert({
         username,
         item_id: itemId,
@@ -216,15 +322,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       console.error('Error adding snipe:', error);
     }
   };
+
   const deleteChatMessage = async (id: string) => {
     await supabase.from('chat_messages').delete().eq('id', id);
+    // Realtime will handle state update, but also update locally for immediate feedback
     setChatMessages(prev => prev.filter(msg => msg.id !== id));
   };
 
   const deleteSnipeFeed = async (id: string) => {
     await supabase.from('snipe_feeds').delete().eq('id', id);
+    // Realtime will handle state update, but also update locally for immediate feedback
     setSnipeFeeds(prev => prev.filter(snipe => snipe.id !== id));
   };
+
   return (
     <AdminContext.Provider value={{
       isAdmin,
@@ -237,6 +347,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       deleteSnipeFeed,
       typingUser,
       setTypingUser,
+      autoChatEnabled,
+      setAutoChatEnabled,
     }}>
       {children}
     </AdminContext.Provider>
@@ -251,9 +363,4 @@ export function useAdmin() {
   return context;
 }
 
-
 export { ALLOWED_USERNAMES };
-
-
-
-
