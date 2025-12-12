@@ -27,40 +27,37 @@ serve(async (req) => {
 
     const { recentMessages } = await req.json();
 
-    const systemPrompt = `You are simulating a group chat between Roblox traders discussing the Roblox limited item trading market. Generate natural, casual messages that real traders would say.
+    // Pick 1-2 usernames to respond (usually just 1)
+    const numResponders = Math.random() > 0.7 ? 2 : 1;
+    const shuffled = [...ALLOWED_USERNAMES].sort(() => Math.random() - 0.5);
+    const selectedUsernames = shuffled.slice(0, numResponders);
+
+    const systemPrompt = `You are simulating a SINGLE message from a Roblox trader in a casual group chat. Write EXACTLY like a real teenager chatting.
 
 CRITICAL RULES:
-- Write EXACTLY like real teenagers/young adults chatting casually
-- Use lowercase mostly, occasional caps for emphasis
-- Use common abbreviations: ngl, tbh, fr, imo, lmao, bruh, lowkey, highkey
-- Make typos occasionally
-- Keep messages SHORT (1-15 words typically)
-- NO emojis or very minimal
-- Sound excited about snipes and deals
-- Reference real trading concepts: RAP, value, demand, projected, hoarded items
-- Talk about specific item types: dominus, valkyrie, sparkle time, korblox, limiteds
-- Discuss market trends, flipping strategies, profit margins
-- Be skeptical sometimes, give opinions
-- React to each other naturally
+- Generate ONLY 1 short message
+- Write in lowercase, casual style
+- Use abbreviations naturally: ngl, tbh, fr, imo, lmao, bruh, lowkey, highkey, rn, tho
+- Make occasional typos (like "teh" or missing letters)
+- Keep it SHORT (3-12 words max)
+- NO emojis or minimal
+- Sound natural, not scripted
+- Reference trading: RAP, value, demand, projected, limiteds, dominus, valk, sparkle time, korblox
 
-TOPICS TO DISCUSS:
-- Recent snipes and deals
-- Item price predictions
-- Market trends (rising/falling values)
-- Trading tips and strategies
-- Flex recent profits
-- Ask for advice
-- Discuss projected items
-- Talk about demand changes
+TOPICS (pick one naturally):
+- React to a recent message or snipe
+- Share a quick opinion on an item
+- Ask a casual question
+- Flex a small win
+- Comment on market trends
 
-Generate 1-3 messages from different usernames. Format as JSON array:
-[{"username": "username", "message": "message text"}]
+The username sending this message is: ${selectedUsernames[0]}
 
-Only use these usernames: ${ALLOWED_USERNAMES.join(', ')}`;
+Return ONLY the message text, nothing else. No quotes, no username prefix.`;
 
     const userPrompt = recentMessages && recentMessages.length > 0
-      ? `Recent chat context:\n${recentMessages.map((m: any) => `${m.username}: ${m.message}`).join('\n')}\n\nGenerate natural follow-up messages that continue or start a new topic.`
-      : `Start a new conversation about Roblox limited item trading.`;
+      ? `Recent chat:\n${recentMessages.slice(-3).map((m: any) => `${m.username}: ${m.message}`).join('\n')}\n\nWrite a natural reply or new comment.`
+      : `Start with a casual comment about Roblox limited trading.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -74,7 +71,7 @@ Only use these usernames: ${ALLOWED_USERNAMES.join(', ')}`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.9,
+        temperature: 0.95,
       }),
     });
 
@@ -85,21 +82,45 @@ Only use these usernames: ${ALLOWED_USERNAMES.join(', ')}`;
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '[]';
+    let content = data.choices?.[0]?.message?.content || '';
     
-    // Parse the JSON from the response
-    let messages = [];
-    try {
-      // Extract JSON from markdown code blocks if present
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      const jsonStr = jsonMatch ? jsonMatch[1].trim() : content.trim();
-      messages = JSON.parse(jsonStr);
-    } catch (e) {
-      console.error('Failed to parse AI response:', content);
-      // Fallback messages
-      messages = [
-        { username: ALLOWED_USERNAMES[Math.floor(Math.random() * ALLOWED_USERNAMES.length)], message: 'market been crazy lately ngl' }
-      ];
+    // Clean up the response
+    content = content.trim().replace(/^["']|["']$/g, '');
+    
+    // Build messages array
+    const messages = [];
+    if (content) {
+      messages.push({ username: selectedUsernames[0], message: content });
+    }
+
+    // Occasionally add a second short reply (30% chance)
+    if (numResponders > 1 && messages.length > 0) {
+      const secondPrompt = `Someone just said: "${content}"\n\nWrite a very short reaction (2-6 words) like "fr" or "thats crazy" or "lmao no way". The username is ${selectedUsernames[1]}.`;
+      
+      const secondResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: 'Write a 2-6 word casual reaction. No quotes. Lowercase. Like a teen would reply.' },
+            { role: 'user', content: secondPrompt }
+          ],
+          temperature: 0.9,
+        }),
+      });
+
+      if (secondResponse.ok) {
+        const secondData = await secondResponse.json();
+        let secondContent = secondData.choices?.[0]?.message?.content || '';
+        secondContent = secondContent.trim().replace(/^["']|["']$/g, '');
+        if (secondContent && secondContent.length < 50) {
+          messages.push({ username: selectedUsernames[1], message: secondContent });
+        }
+      }
     }
 
     return new Response(JSON.stringify({ messages }), {
