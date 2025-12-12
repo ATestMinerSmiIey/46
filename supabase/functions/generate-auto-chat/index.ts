@@ -39,35 +39,50 @@ serve(async (req) => {
     const shouldReply = recentMessages && recentMessages.length > 0 && Math.random() > 0.3;
     const lastMessage = recentMessages?.[recentMessages.length - 1];
 
-    const systemPrompt = `You're ${selectedUser} in a chill Roblox trading group chat. Be natural and subtle.
+    // Real Roblox limited items only
+    const realItems = ['Dominus Empyreus', 'Dominus Frigidus', 'Dominus Rex', 'Valkyrie Helm', 'Headless Horseman', 'Korblox Deathspeaker', 'Clockwork Shades', 'Sparkle Time Fedora', 'Green Sparkle Time Fedora', 'Violet Valk', 'Red Valk', 'Bling Bling', 'Shaggy', 'Bluesteel Fedora', 'JJ5x5', 'Perfectly Legitimate Business Hat', 'Icedagger', 'Wanwood Crown'];
+    
+    const recentContext = recentMessages?.slice(-6).map((m: any) => `${m.username}: ${m.message}`).join('\n') || '';
+
+    const systemPrompt = `You're ${selectedUser} in a Roblox limited trading group chat. Have REAL conversations.
+
+REAL ITEMS ONLY (use these exact names): ${realItems.slice(0, 10).join(', ')}
 
 STYLE:
 - lowercase, minimal punctuation
-- short messages (4-12 words usually)
-- abbreviations sometimes: ngl, fr, tbh, lol, idk
-- don't force slang, be natural
-- sometimes just agree or react simply
+- 5-15 words, complete thoughts
+- casual: ngl, fr, tbh, lol, idk (sparingly)
 
 ${shouldReply && lastMessage ? `
-You're replying to ${lastMessage.username} who said: "${lastMessage.message}"
-- respond naturally to what they said
-- can agree, disagree, add info, or ask followup
-- reference their point casually
+RECENT CHAT:
+${recentContext}
+
+You're responding to this conversation. ACTUALLY ENGAGE:
+- Share a real opinion or experience
+- Disagree or agree with reasoning
+- Add new info to the discussion
+- Ask a specific followup question
 ` : `
-Start a new topic casually like you just got on:
-- ask a quick question about an item
-- share something you noticed about prices
-- mention something happening in trading
+Start a topic others can discuss:
+- Your opinion on a specific item's value
+- Something you noticed about a real item's price
+- Ask what others think about a specific trade
 `}
 
-GOOD EXAMPLES:
-- "yeah fr the valk market is weird rn"
-- "wait really? i thought it was still stable"
-- "anyone trading korblox btw"
-- "just checked and headless dropped again lol"
-- "idk man demand seems fine to me"
+GOOD (substantive):
+- "headless dropped like 50k this week, prob gonna keep going tbh"
+- "nah dominus rex is overrated, frigidus has way better demand"
+- "i sold my korblox last week for 23k, kinda regret it now"
+- "wait so you think valk is gonna go back up? idk man"
+- "anyone know why clockwork shades been so stable lately"
 
-Output ONLY the message, no quotes.`;
+BAD (avoid):
+- single words like "val" or "fr"
+- generic "yeah that's true" without adding anything
+- made up items that don't exist
+- just asking "anyone trading X" with no context
+
+Output ONLY the message, no quotes or username prefix.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
