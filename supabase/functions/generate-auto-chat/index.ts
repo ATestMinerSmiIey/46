@@ -27,43 +27,47 @@ serve(async (req) => {
 
     const { recentMessages } = await req.json();
 
-    // Pick 1-2 usernames to respond (usually just 1)
-    const numResponders = Math.random() > 0.7 ? 2 : 1;
-    const shuffled = [...ALLOWED_USERNAMES].sort(() => Math.random() - 0.5);
-    const selectedUsernames = shuffled.slice(0, numResponders);
+    // Get recent active users to avoid - simulate some being "AFK"
+    const recentActiveUsers = recentMessages?.slice(-4).map((m: any) => m.username) || [];
+    
+    // Pick 1 user, preferring someone who hasn't spoken recently (simulates different people being active)
+    const availableUsers = ALLOWED_USERNAMES.filter(u => !recentActiveUsers.includes(u));
+    const userPool = availableUsers.length > 0 ? availableUsers : ALLOWED_USERNAMES;
+    const selectedUser = userPool[Math.floor(Math.random() * userPool.length)];
 
-    const systemPrompt = `You are simulating a message from a Roblox limited item trader in a casual group chat. Write like a real teenager/young adult chatting.
+    // Check if we should respond to someone or start fresh topic
+    const shouldReply = recentMessages && recentMessages.length > 0 && Math.random() > 0.3;
+    const lastMessage = recentMessages?.[recentMessages.length - 1];
 
-CRITICAL RULES:
-- Generate 1 complete, meaningful message (6-20 words)
-- Write in lowercase, casual style
-- Use abbreviations sparingly: ngl, tbh, fr, imo, lmao, bruh, lowkey
-- Sound natural and conversational
-- NEVER write single words or fragments like "val" or "nice" alone
-- Always write a complete thought or sentence
+    const systemPrompt = `You're ${selectedUser} in a chill Roblox trading group chat. Be natural and subtle.
 
-TOPICS (pick one):
-- Comment on a specific limited item (dominus, valk, sparkle time fedora, korblox, headless, clockwork)
-- Share opinion on RAP trends or market movement
-- Ask about item demand or projected values
-- Mention a trade or snipe you did recently
-- React to what someone said with a full response
-- Talk about underrated or overpaying items
+STYLE:
+- lowercase, minimal punctuation
+- short messages (4-12 words usually)
+- abbreviations sometimes: ngl, fr, tbh, lol, idk
+- don't force slang, be natural
+- sometimes just agree or react simply
 
-EXAMPLES of good messages:
-- "ngl the sparkle time fedora been going crazy lately"
-- "anyone know if valk is still dropping or what"
-- "just sniped a korblox for like 10k under lmao"
-- "dominus frigidus demand is lowkey insane rn"
-- "fr tho the rap on headless is so inflated"
+${shouldReply && lastMessage ? `
+You're replying to ${lastMessage.username} who said: "${lastMessage.message}"
+- respond naturally to what they said
+- can agree, disagree, add info, or ask followup
+- reference their point casually
+` : `
+Start a new topic casually like you just got on:
+- ask a quick question about an item
+- share something you noticed about prices
+- mention something happening in trading
+`}
 
-The username is: ${selectedUsernames[0]}
+GOOD EXAMPLES:
+- "yeah fr the valk market is weird rn"
+- "wait really? i thought it was still stable"
+- "anyone trading korblox btw"
+- "just checked and headless dropped again lol"
+- "idk man demand seems fine to me"
 
-Return ONLY the message text. No quotes, no prefix.`;
-
-    const userPrompt = recentMessages && recentMessages.length > 0
-      ? `Recent chat:\n${recentMessages.slice(-3).map((m: any) => `${m.username}: ${m.message}`).join('\n')}\n\nWrite a natural reply or new comment.`
-      : `Start with a casual comment about Roblox limited trading.`;
+Output ONLY the message, no quotes.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -75,9 +79,9 @@ Return ONLY the message text. No quotes, no prefix.`;
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: 'user', content: 'Generate the chat message.' }
         ],
-        temperature: 0.95,
+        temperature: 0.85,
       }),
     });
 
@@ -90,43 +94,12 @@ Return ONLY the message text. No quotes, no prefix.`;
     const data = await response.json();
     let content = data.choices?.[0]?.message?.content || '';
     
-    // Clean up the response
-    content = content.trim().replace(/^["']|["']$/g, '');
+    // Clean up
+    content = content.trim().replace(/^["']|["']$/g, '').replace(/^.*?:\s*/, '');
     
-    // Build messages array
     const messages = [];
-    if (content) {
-      messages.push({ username: selectedUsernames[0], message: content });
-    }
-
-    // Occasionally add a second short reply (30% chance)
-    if (numResponders > 1 && messages.length > 0) {
-      const secondPrompt = `Someone just said: "${content}"\n\nWrite a very short reaction (2-6 words) like "fr" or "thats crazy" or "lmao no way". The username is ${selectedUsernames[1]}.`;
-      
-      const secondResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            { role: 'system', content: 'Write a 2-6 word casual reaction. No quotes. Lowercase. Like a teen would reply.' },
-            { role: 'user', content: secondPrompt }
-          ],
-          temperature: 0.9,
-        }),
-      });
-
-      if (secondResponse.ok) {
-        const secondData = await secondResponse.json();
-        let secondContent = secondData.choices?.[0]?.message?.content || '';
-        secondContent = secondContent.trim().replace(/^["']|["']$/g, '');
-        if (secondContent && secondContent.length < 50) {
-          messages.push({ username: selectedUsernames[1], message: secondContent });
-        }
-      }
+    if (content && content.length > 2) {
+      messages.push({ username: selectedUser, message: content });
     }
 
     return new Response(JSON.stringify({ messages }), {
